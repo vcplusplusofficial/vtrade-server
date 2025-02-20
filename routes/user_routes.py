@@ -10,6 +10,8 @@ router = APIRouter()
 @router.post("/", response_model=UserRead)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user = User(**user.dict())
+    print("DEBUG: user class:", User)
+    print("DEBUG: user.__table__:", getattr(User, "__table__", None))
     encrypted_password = encrypt_password(user.password)
     user.password = encrypted_password
     db.add(user)
@@ -17,19 +19,19 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(user)
     return user
 
-@router.get("/users/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", response_model=UserRead)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@router.get("/users/", response_model=List[UserRead])
+@router.get("/users", response_model=List[UserRead])
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     users = db.exec(select(User).offset(skip).limit(limit)).all()
     return users
 
-@router.put("/users/{user_id}", response_model=UserRead)
+@router.put("/{user_id}", response_model=UserRead)
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     db_user = db.get(User, user_id)
     if db_user is None:
@@ -42,7 +44,7 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.delete("/users/{user_id}")
+@router.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if user is None:
